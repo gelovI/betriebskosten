@@ -61,9 +61,6 @@ Persistenz	Exposed SQL (leicht, schnell, robust)
 PDF-Generierung	Apache PDFBox
 Buildsystem	Gradle Kotlin DSL
 Architektur	Repository-Pattern, Stateful Screens
-📸 Screenshots
-
-(Hier kannst du später Bilder hinzufügen – einfach in /screenshots ablegen und die Pfade ersetzen.)
 
 Hauptübersicht
 
@@ -92,9 +89,9 @@ betriebskosten/
 🔧 Installation
 
 Repository klonen:
-
+```
 git clone https://github.com/gelovI/betriebskosten.git
-
+```
 
 In IntelliJ IDEA öffnen.
 

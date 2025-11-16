@@ -98,8 +98,9 @@ In IntelliJ IDEA öffnen.
 Gradle Sync abwarten (Compose Desktop lädt automatisch).
 
 Starten:
-
+```
 Main.kt → Run
+```
 
 📝 Nutzung
 
@@ -116,8 +117,9 @@ Optional zeitliche Vorauszahlungen pro Wohnung definieren
 📦 PDF-Speicherort
 
 Alle Abrechnungen werden automatisch abgelegt unter:
-
+```
 /Users/<username>/betriebskosten_pdfs/
+```
 
 👤 Autor
 

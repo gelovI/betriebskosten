@@ -71,6 +71,7 @@ Vorauszahlungsperioden
 PDF-Beispiel
 
 📁 Projektstruktur
+```
 betriebskosten/
  ├── data/                     # Repositories, Tables
  ├── domain/                   # Fachlogik & Models
@@ -85,6 +86,7 @@ betriebskosten/
  ├── PdfService.kt             # PDF Export
  ├── Abrechnung.kt             # Abrechnungslogik
  └── build.gradle.kts          # Project Build Script
+```
 
 🔧 Installation
 

@@ -46,6 +46,16 @@ compose.desktop {
     application {
         mainClass = "com.gelov.betriebskosten.MainKt"
 
+        // NEU: Build-Konfiguration
+        buildTypes {
+            release {
+                proguard {
+                    // Shrinking/Obfuscation deaktivieren
+                    isEnabled.set(false)
+                }
+            }
+        }
+
         nativeDistributions {
             targetFormats(
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe,

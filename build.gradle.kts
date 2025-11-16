@@ -55,8 +55,7 @@ compose.desktop {
             packageVersion = "1.0.0"
 
             windows {
-                // Optional: Icon-Datei (erst mal auskommentiert, bis du eine hast)
-                // iconFile.set(project.file("src/main/resources/app-icon.ico"))
+                iconFile.set(project.file("src/main/resources/betriebskosten_icon.ico"))
             }
         }
     }

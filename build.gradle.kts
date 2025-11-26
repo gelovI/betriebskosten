@@ -71,6 +71,8 @@ kotlin {
                         menu = true
                         shortcut = true
                         iconFile.set(project.file("src/main/resources/betriebskosten_icon.ico"))
+
+                        upgradeUuid = "A9B733A2-4992-45BB-B0D0-7E77BA22B022"
                     }
                 }
             }

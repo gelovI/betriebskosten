@@ -1,3 +1,5 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+
 plugins {
     kotlin("jvm") version "2.0.0"
     id("org.jetbrains.compose") version "1.7.0"
@@ -42,31 +44,34 @@ kotlin {
     jvmToolchain(21)
 }
 
-compose.desktop {
-    application {
-        mainClass = "com.gelov.betriebskosten.MainKt"
 
-        // NEU: Build-Konfiguration
-        buildTypes {
-            release {
-                proguard {
-                    // Shrinking/Obfuscation deaktivieren
-                    isEnabled.set(false)
+        compose.desktop {
+            application {
+                mainClass = "com.gelov.betriebskosten.MainKt"
+
+                javaHome = "C:/Program Files/Eclipse Adoptium/jdk-21.0.8.9-hotspot"
+
+                buildTypes {
+                    release {
+                        proguard {
+                            isEnabled.set(false)
+                        }
+                    }
+                }
+
+                nativeDistributions {
+                    targetFormats(TargetFormat.Exe, TargetFormat.Msi)
+
+                    includeAllModules = true
+
+                    packageName = "Wohnungskostenabrechnung"
+                    packageVersion = "1.0.0"
+
+                    windows {
+                        menu = true
+                        shortcut = true
+                        iconFile.set(project.file("src/main/resources/betriebskosten_icon.ico"))
+                    }
                 }
             }
         }
-
-        nativeDistributions {
-            targetFormats(
-                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe,
-            )
-
-            packageName = "Wohnungskostenabrechnung"
-            packageVersion = "1.0.0"
-
-            windows {
-                iconFile.set(project.file("src/main/resources/betriebskosten_icon.ico"))
-            }
-        }
-    }
-}

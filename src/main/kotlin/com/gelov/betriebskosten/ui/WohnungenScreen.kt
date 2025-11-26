@@ -9,13 +9,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gelov.betriebskosten.data.WohnungenRepository
+import com.gelov.betriebskosten.data.MieterRepository
 import com.gelov.betriebskosten.domain.Wohnung
+import com.gelov.betriebskosten.domain.Mieter
 import com.gelov.betriebskosten.ui.util.CommonSimpleTable
 import java.math.BigDecimal
 
 @Composable
 fun WohnungenScreen() {
     var wohnungen by remember { mutableStateOf<List<Wohnung>>(emptyList()) }
+    var mieterListe by remember { mutableStateOf<List<Mieter>>(emptyList()) }
 
     // Aktuell bearbeitete Wohnung (Dialog)
     var editing by remember { mutableStateOf<Wohnung?>(null) }
@@ -37,9 +40,20 @@ fun WohnungenScreen() {
         }
     }
 
+    fun reloadMieter() {
+        try {
+            mieterListe = MieterRepository.getAll()
+        } catch (e: Exception) {
+            errorMessage = "Fehler beim Laden der Mieter: ${e.message ?: "Unbekannter Fehler"}"
+            println("[WohnungenScreen] Fehler beim Laden der Mieter: ${e.stackTraceToString()}")
+            mieterListe = emptyList()
+        }
+    }
+
     // Beim ersten Anzeigen Daten laden
     LaunchedEffect(Unit) {
         reloadWohnungen()
+        reloadMieter()
     }
 
     Column(
@@ -77,6 +91,7 @@ fun WohnungenScreen() {
 
             WohnungenTable(
                 wohnungen = wohnungen,
+                mieterById = mieterListe.associateBy { it.id },
                 onEdit = { w ->
                     isNew = false
                     editing = w
@@ -94,6 +109,7 @@ fun WohnungenScreen() {
         WohnungenEditDialog(
             initial = current,
             isNew = isNew,
+            mieterListe = mieterListe,
             onDismiss = { editing = null },
             onConfirm = { adresse, qm, voraus, mieterId ->
                 try {
@@ -191,18 +207,16 @@ fun WohnungenScreen() {
 @Composable
 private fun WohnungenTable(
     wohnungen: List<Wohnung>,
+    mieterById: Map<Long, Mieter>,
     onEdit: (Wohnung) -> Unit,
     onDelete: (Wohnung) -> Unit
 ) {
-    // Spaltenbreiten: Adresse / Fläche / Vorauszahlung / Mieter-ID / Aktionen
-    // WICHTIG:
-    // - rows haben 4 Werte (ohne Aktionen)
-    // - headers & columnWeights haben 5 Einträge (inkl. "Aktionen")
+    // Spaltenbreiten: Adresse / Fläche / Vorauszahlung / Mieter / Aktionen
     val columnWeights = listOf(
-        0.35f, // Adresse
+        0.15f, // Adresse
         0.15f, // Fläche
         0.20f, // Vorauszahlung
-        0.10f, // Mieter-ID
+        0.30f, // Mieter (Name)
         0.20f  // Aktionen
     )
 
@@ -211,16 +225,19 @@ private fun WohnungenTable(
             "Adresse",
             "Fläche (m²)",
             "Vorauszahlung (€)",
-            "Mieter-ID",
-            "Aktionen"              // ← zusätzliche Spalte für Aktionen
+            "Mieter",
+            "Aktionen"
         ),
         rows = wohnungen.map { w ->
+            val mieterName = w.aktuellerMieterId?.let { id ->
+                mieterById[id]?.let { mieterLabel(it) } ?: "ID $id"
+            }.orEmpty()
+
             listOf(
                 w.adresse,
                 w.wohnflaecheQm.toString(),
                 w.vorauszahlung?.toEuro().orEmpty(),
-                w.aktuellerMieterId?.toString().orEmpty()
-                // KEIN fünfter Eintrag hier → Actions-Spalte kommt aus actions{}
+                mieterName
             )
         },
         columnWeights = columnWeights,
@@ -245,10 +262,14 @@ private fun WohnungenTable(
     )
 }
 
+private fun mieterLabel(m: Mieter): String = m.name
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WohnungenEditDialog(
     initial: Wohnung,
     isNew: Boolean,
+    mieterListe: List<Mieter>,
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, String) -> Unit
 ) {
@@ -261,7 +282,6 @@ private fun WohnungenEditDialog(
     var adresseError by remember { mutableStateOf<String?>(null) }
     var qmError by remember { mutableStateOf<String?>(null) }
     var vorausError by remember { mutableStateOf<String?>(null) }
-    var mieterIdError by remember { mutableStateOf<String?>(null) }
 
     fun validate(): Boolean {
         var ok = true
@@ -303,11 +323,7 @@ private fun WohnungenEditDialog(
             }
         } else null
 
-        mieterIdError = if (mieterId.isNotBlank() && mieterId.toLongOrNull() == null) {
-            ok = false
-            "Ungültige Mieter-ID."
-        } else null
-
+        // mieterId stammt aus Dropdown → immer gültig (oder leer)
         return ok
     }
 
@@ -354,19 +370,52 @@ private fun WohnungenEditDialog(
                         vorausError?.let { err -> Text(err) }
                     }
                 )
-                OutlinedTextField(
-                    value = mieterId,
-                    onValueChange = {
-                        mieterId = it
-                        if (mieterIdError != null) mieterIdError = null
-                    },
-                    isError = mieterIdError != null,
-                    label = { Text("Aktueller Mieter ID (optional)") },
-                    singleLine = true,
-                    supportingText = {
-                        mieterIdError?.let { err -> Text(err) }
+
+                // --- Mieter-Auswahl (Dropdown) ---
+                var expanded by remember { mutableStateOf(false) }
+                val selectedMieter = mieterListe.find { it.id.toString() == mieterId }
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedMieter?.let { "${mieterLabel(it)} (ID ${it.id})" }
+                            ?: "Kein Mieter zugewiesen",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Mieter auswählen") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Kein Mieter zugewiesen") },
+                            onClick = {
+                                mieterId = ""
+                                expanded = false
+                            }
+                        )
+
+                        mieterListe.forEach { m ->
+                            DropdownMenuItem(
+                                text = { Text(mieterLabel(m)) },
+                                onClick = {
+                                    mieterId = m.id.toString()
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
-                )
+                }
             }
         },
         confirmButton = {

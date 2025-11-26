@@ -8,39 +8,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.rememberWindowState
-import kotlin.system.exitProcess
 
 @Composable
 fun BetriebskostenApp() {
-    val windowState = rememberWindowState(width = 1400.dp, height = 900.dp)
     var currentScreen by remember { mutableStateOf(MainScreen.Dashboard) }
 
-    Window(
-        onCloseRequest = { exitProcess(0) },
-        title = "Betriebskosten",
-        state = windowState
+    MaterialTheme(
+        colorScheme = lightColorScheme(
+            primary = MaterialTheme.colorScheme.primary,
+        )
     ) {
-        MaterialTheme(
-            colorScheme = lightColorScheme(
-                primary = MaterialTheme.colorScheme.primary,
-            )
-        ) {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                Row {
-                    NavigationPanel(
-                        current = currentScreen,
-                        onSelect = { currentScreen = it }
-                    )
-                    HorizontalDivider(modifier = Modifier
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Row {
+                NavigationPanel(
+                    current = currentScreen,
+                    onSelect = { currentScreen = it }
+                )
+                HorizontalDivider(
+                    modifier = Modifier
                         .fillMaxHeight()
-                        .width(1.dp))
-                    ScreenHost(
-                        modifier = Modifier.weight(1f),
-                        screen = currentScreen
-                    )
-                }
+                        .width(1.dp)
+                )
+                ScreenHost(
+                    modifier = Modifier.weight(1f),
+                    screen = currentScreen
+                )
             }
         }
     }
